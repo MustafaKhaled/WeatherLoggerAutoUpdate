@@ -1,7 +1,9 @@
 package com.kot.weatherloggerautoupdate.domain.repo
+import com.kot.weatherloggerautoupdate.domain.model.WeatherResponse
 import com.kot.weatherloggerautoupdate.util.ResponseApi
+import com.kot.weatherloggerautoupdate.util.Result
 import retrofit2.Response
 
 interface WeatherRepo{
-    fun getCurrentWeather();
+    suspend fun getCurrentWeather(lat: String, lng: String, appId: String) : Result<WeatherResponse>?
 }

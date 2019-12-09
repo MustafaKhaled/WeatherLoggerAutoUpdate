@@ -18,6 +18,13 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
+
+        debug {
+            buildConfigField "String", "BASE_URL", '"http://api.openweathermap.org/data/2.5/"'
+            buildConfigField "String", "API_KEY", '"64eecb4bebaeb1e30e4dc2f985ce52cc"'
+
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -74,6 +81,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0'
     //Coroutines Android
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.1'
+
+    implementation 'org.conscrypt:conscrypt-android:2.2.1'
 
 
 }
