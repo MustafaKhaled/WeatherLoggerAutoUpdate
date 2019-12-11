@@ -1,4 +1,5 @@
 package com.kot.weatherloggerautoupdate.domain.repo
+import androidx.lifecycle.LiveData
 import com.kot.weatherloggerautoupdate.domain.model.WeatherResponse
 import com.kot.weatherloggerautoupdate.util.ResponseApi
 import com.kot.weatherloggerautoupdate.util.Result
