@@ -2,6 +2,8 @@ package com.kot.weatherloggerautoupdate.data.repo
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
+import com.kot.weatherloggerautoupdate.data.presistance.room.dao.WeatherDao
+import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
 import com.kot.weatherloggerautoupdate.data.remote.ApiServices
 import com.kot.weatherloggerautoupdate.domain.model.WeatherResponse
 import com.kot.weatherloggerautoupdate.domain.repo.WeatherRepo
@@ -13,7 +15,7 @@ import java.io.IOException
 import java.lang.Exception
 import kotlin.math.ln
 
-class WeatherRepoImpl(private val apiServices: ApiServices) : WeatherRepo {
+class WeatherRepoImpl(private val apiServices: ApiServices, private val weatherDao: WeatherDao) : WeatherRepo {
     override suspend fun getCurrentWeather(
         lat: String,
         lng: String,
@@ -25,6 +27,14 @@ class WeatherRepoImpl(private val apiServices: ApiServices) : WeatherRepo {
         } else {
             Result.Error(IOException("Error occurred during fetching movies!"))
         }
+    }
+
+    override suspend fun loadWeatherPersistence(): LiveData<List<WeatherEntity>> {
+        return weatherDao.getAll()
+    }
+
+    override suspend fun insertItem(weatherEntity: WeatherEntity) {
+        weatherDao.insert(weatherEntity)
     }
 
 }

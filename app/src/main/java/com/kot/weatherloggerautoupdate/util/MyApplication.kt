@@ -2,6 +2,7 @@ package com.kot.weatherloggerautoupdate.util
 
 import android.app.Application
 import com.kot.weatherloggerautoupdate.di.NetworkModule
+import com.kot.weatherloggerautoupdate.di.PersistenceModule
 import com.kot.weatherloggerautoupdate.di.WeatherModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -14,7 +15,7 @@ class MyApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApplication)
-            modules(listOf(NetworkModule, WeatherModules))
+            modules(listOf(NetworkModule, WeatherModules, PersistenceModule))
         }
 
     }

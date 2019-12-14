@@ -10,11 +10,8 @@ import org.koin.dsl.module
 
 val WeatherModules = module{
     factory { CurrentWeatherUseCase(get()) }
-    factory { createCurrentWeatherRepoInsrance(get())}
+    factory<WeatherRepo> { WeatherRepoImpl(get(),get()) }
     viewModel { CurrentWeatherViewModel(get()) }
 
 
-}
-fun createCurrentWeatherRepoInsrance(apiServices: ApiServices): WeatherRepo {
-    return WeatherRepoImpl(apiServices)
 }

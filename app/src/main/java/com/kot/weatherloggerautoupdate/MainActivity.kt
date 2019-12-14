@@ -16,12 +16,14 @@ import androidx.lifecycle.observe
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
 import com.kot.weatherloggerautoupdate.presentation.viewmodel.CurrentWeatherViewModel
 import com.kot.weatherloggerautoupdate.util.Result
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
@@ -64,7 +66,19 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             getCurrentLocation()
         }
 
+        observeDataInsertion()
 
+    }
+
+    private fun observeDataInsertion() {
+        currentWeatherViewModel.insertItemLiveData.observe(this)  {
+          when(it){
+              is Result.Loading -> {}
+              is Result.Success -> {
+
+              }
+          }
+        }
     }
 
     override fun onResume() {
@@ -164,6 +178,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                     is Result.Success -> {
                         progressParent.visibility = View.GONE
                         current_temp_layout.visibility = View.VISIBLE
+                        val temperature = it.data!!.main.temp.toString()
+                        val date = Date().toString()
+                        val pressure = it.data.main.pressure.toString()
+                        currentWeatherViewModel.insertItem(WeatherEntity(temperature, date,
+                            pressure
+                        ))
                     }
                     is Result.Error -> {
                         progressBar.visibility = View.GONE
@@ -173,6 +193,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
             }
     }
+
+
 
 
     private fun requestPermissionsRequired() {
