@@ -13,6 +13,7 @@ android {
         applicationId "com.kot.weatherloggerautoupdate"
         minSdkVersion 16
         targetSdkVersion 29
+        multiDexEnabled true
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -84,8 +85,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$livedata_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$livedata_version"
 
-    implementation 'org.conscrypt:conscrypt-android:2.2.1'
-
     //Easy Permission
     implementation 'pub.devrel:easypermissions:3.0.0'
     //Location
@@ -95,13 +94,16 @@ dependencies {
     def room_version = "2.2.2"
 
     implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version" // For Kotlin use kapt instead of annotationProcessor
+    kapt "androidx.room:room-compiler:$room_version" // For Kotlin use kapt instead of annotationProcessor
 
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:$room_version"
 
     //Material design
     implementation "com.google.android.material:material:1.2.0-alpha02"
+
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.14'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
 
 
 

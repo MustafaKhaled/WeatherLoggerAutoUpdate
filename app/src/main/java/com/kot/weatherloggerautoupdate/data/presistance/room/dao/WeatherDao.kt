@@ -6,12 +6,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
+import com.kot.weatherloggerautoupdate.util.Result
 
 @Dao
-interface WeatherDao {
-    @Query("SELECT * FROM weather_items")
-    fun getAll(): LiveData<List<WeatherEntity>>
+abstract class WeatherDao {
+    @Query("SELECT * FROM WeatherEntity")
+    abstract fun getAll(): List<WeatherEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(weatherItem: WeatherEntity)
+    abstract suspend fun insert(weatherItem: WeatherEntity)
 }

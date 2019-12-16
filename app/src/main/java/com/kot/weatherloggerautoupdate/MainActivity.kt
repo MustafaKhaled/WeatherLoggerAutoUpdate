@@ -16,6 +16,7 @@ import androidx.lifecycle.observe
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
 import com.kot.weatherloggerautoupdate.presentation.viewmodel.CurrentWeatherViewModel
 import com.kot.weatherloggerautoupdate.util.Result
@@ -59,6 +60,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 }
             }
         }
+//
+
 
         if (!EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
             requestPermissionsRequired()
@@ -67,7 +70,24 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         }
 
         observeDataInsertion()
+        getPersistenceWeatherLog()
 
+
+    }
+
+    private fun getPersistenceWeatherLog() {
+        currentWeatherViewModel.getAllItems().observe(this) {
+            when (it) {
+                is Result.Loading -> {
+                }
+                is Result.Success -> {
+                    Log.d(TAG, "All data loaded" + it.data!!.get(0).temperature)
+                }
+                is Result.Error -> {
+                    Log.d(TAG, "Error")
+                }
+            }
+        }
     }
 
     private fun observeDataInsertion() {
@@ -75,7 +95,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
           when(it){
               is Result.Loading -> {}
               is Result.Success -> {
-
+                Snackbar.make(recyclerView,"Weather log saved",Snackbar.LENGTH_LONG).show()
               }
           }
         }

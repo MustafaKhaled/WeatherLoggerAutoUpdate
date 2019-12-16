@@ -29,7 +29,7 @@ class WeatherRepoImpl(private val apiServices: ApiServices, private val weatherD
         }
     }
 
-    override suspend fun loadWeatherPersistence(): LiveData<List<WeatherEntity>> {
+    override suspend fun loadWeatherPersistence(): List<WeatherEntity> {
         return weatherDao.getAll()
     }
 

@@ -8,6 +8,6 @@ import retrofit2.Response
 
 interface WeatherRepo{
     suspend fun getCurrentWeather(lat: String, lng: String, appId: String) : Result<WeatherResponse>?
-    suspend fun loadWeatherPersistence(): LiveData<List<WeatherEntity>>
+    suspend fun loadWeatherPersistence(): List<WeatherEntity>
     suspend fun insertItem(weatherEntity: WeatherEntity)
 }
