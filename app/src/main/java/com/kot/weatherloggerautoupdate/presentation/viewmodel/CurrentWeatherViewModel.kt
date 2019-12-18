@@ -3,6 +3,7 @@ package com.kot.weatherloggerautoupdate.presentation.viewmodel
 import androidx.lifecycle.*
 import com.kot.weatherloggerautoupdate.BuildConfig
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
+import com.kot.weatherloggerautoupdate.data.presistance.sharedpref.SharedPreferenceManager
 import com.kot.weatherloggerautoupdate.domain.model.WeatherResponse
 import com.kot.weatherloggerautoupdate.domain.repo.WeatherRepo
 import com.kot.weatherloggerautoupdate.domain.usecases.CurrentWeatherUseCase
@@ -14,7 +15,6 @@ import java.lang.Exception
 class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
     ViewModel() {
     var insertItemLiveData = MutableLiveData<Result<Exception>>()
-    var getItemsLiveData = MutableLiveData<Result<List<WeatherEntity>>>()
 
     fun loadWeather(lat: String, lng: String): LiveData<Result<WeatherResponse>?> {
         return liveData(context = Dispatchers.IO) {
@@ -37,16 +37,8 @@ class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
 
     }
 
-
-
-    val getPersistenceWeather = liveData(context = Dispatchers.IO) {
-        emit(Result.Loading())
-        try {
-            emit(Result.Success(weatherRepo.loadWeatherPersistence()))
-        }
-        catch (e: Exception){
-            emit(Result.Error(e))
-        }
+    fun updateSharedPreference(currentTemp: String, maxTemp: String, minTemp: String){
+        weatherRepo.updateSharedPreference(currentTemp,maxTemp, minTemp)
     }
 
     fun insertItem(weatherEntity: WeatherEntity){
@@ -55,11 +47,20 @@ class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
             try {
                 weatherRepo.insertItem(weatherEntity)
                 insertItemLiveData.postValue(Result.Success(null))
+
             }
             catch (e: Exception){
                 insertItemLiveData.postValue(Result.Error(e))
             }
         }
+    }
+
+    fun getInformationStored(): SharedPreferenceManager.WeatherPersistence{
+        return weatherRepo.checkStoredData()
+    }
+
+    fun updateFirstTime(){
+        weatherRepo.updateFirstTime()
     }
 
 

@@ -10,12 +10,18 @@ class SharedPreferenceManager(private val context: Context) {
     private val currentTempKey: String = "currTemp"
     private val maxTempKey: String = "maxTemp"
     private val minTempKey: String = "minTemp"
+    private val firstTimeKey: String = "firstTime"
+
 
     fun getLatestWeather(): WeatherPersistence{
-        return WeatherPersistence(sharedPref.getString(currentTempKey,null),sharedPref.getString(maxTempKey,null),sharedPref.getString(minTempKey,null))
+        return WeatherPersistence(sharedPref.getString(currentTempKey,null),
+            sharedPref.getString(maxTempKey,null),
+            sharedPref.getString(minTempKey,null),
+            sharedPref.getBoolean(firstTimeKey,true)
+            )
     }
 
-    fun updateWeatherPresistence(currentTemp: String,
+    fun updateWeatherPersistence(currentTemp: String,
                                  maxTemp: String,
                                  minTemp: String){
         sharedPref.edit().putString(currentTempKey,currentTemp).apply()
@@ -25,6 +31,10 @@ class SharedPreferenceManager(private val context: Context) {
 
     }
 
+    fun updateFirstTime(){
+        sharedPref.edit().putBoolean(firstTimeKey, false).apply()
+    }
 
-    data class WeatherPersistence(val currentTemp: String?, val maxTemp: String?, val minTemp: String? )
+
+    data class WeatherPersistence(val currentTemp: String?, val maxTemp: String?, val minTemp: String?, val isFirstTime: Boolean )
 }

@@ -10,32 +10,40 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.observe
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
+import com.kot.weatherloggerautoupdate.data.presistance.sharedpref.SharedPreferenceManager
 import com.kot.weatherloggerautoupdate.presentation.viewmodel.CurrentWeatherViewModel
+import com.kot.weatherloggerautoupdate.ui.adapter.PersistenceWeatherAdapter
 import com.kot.weatherloggerautoupdate.util.Result
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 import java.util.*
+import kotlin.math.max
 
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    private val TAG ="MainActivity"
+    private val TAG = "MainActivity"
     private val REQUEST_CHECK_SETTINGS: Int = 100
+    private lateinit var informationStored: SharedPreferenceManager.WeatherPersistence
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationManager: LocationManager
     private var requestingLocationUpdates = false
     private var latLng: LatLng = LatLng()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val weatherAdapter: PersistenceWeatherAdapter = PersistenceWeatherAdapter()
     private val currentWeatherViewModel: CurrentWeatherViewModel by viewModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,26 +61,53 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                     if (location != null) {
                         latLng.lat = location.latitude
                         latLng.lng = location.longitude
-
-
-                        getWeather((latLng.lat.toInt()).toString(),(latLng.lng.toInt()).toString())
+                        getWeather((latLng.lat.toInt()).toString(), (latLng.lng.toInt()).toString())
                     }
                 }
             }
         }
-//
 
 
+        setUpRecyclerView()
+        observeDataInsertion()
+        getPersistenceWeatherLog()
         if (!EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
             requestPermissionsRequired()
         } else {
-            getCurrentLocation()
+            informationStored = currentWeatherViewModel.getInformationStored()
+            if (informationStored.isFirstTime)
+                getCurrentLocation()
+
+            populateHighlightedWeather()
+
         }
-
-        observeDataInsertion()
-        getPersistenceWeatherLog()
+    }
 
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == android.R.id.home){
+            finish()
+        }
+        else if(item.itemId == R.id.save_btn){
+            getWeather(latLng.lat.toString(),latLng.lng.toString())
+        }
+        return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.weather_menu, menu)
+        return true
+    }
+
+    private fun populateHighlightedWeather() {
+        current_temp.text = informationStored.currentTemp
+        max_temp.text = informationStored.maxTemp
+        min_temp.text = informationStored.minTemp
+    }
+
+    private fun setUpRecyclerView() {
+        recyclerView.adapter = weatherAdapter
+        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
     }
 
     private fun getPersistenceWeatherLog() {
@@ -81,7 +116,13 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 is Result.Loading -> {
                 }
                 is Result.Success -> {
-                    Log.d(TAG, "All data loaded" + it.data!!.get(0).temperature)
+                    if (it.data?.size == 0 || it.data != null) {
+                        no_rows_found.visibility = View.GONE
+                        val weatherList = it.data
+                        weatherAdapter.addAll(weatherList)
+                    } else {
+                        no_rows_found.visibility = View.VISIBLE
+                    }
                 }
                 is Result.Error -> {
                     Log.d(TAG, "Error")
@@ -89,15 +130,15 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
         }
     }
-
     private fun observeDataInsertion() {
-        currentWeatherViewModel.insertItemLiveData.observe(this)  {
-          when(it){
-              is Result.Loading -> {}
-              is Result.Success -> {
-                Snackbar.make(recyclerView,"Weather log saved",Snackbar.LENGTH_LONG).show()
-              }
-          }
+        currentWeatherViewModel.insertItemLiveData.observe(this) {
+            when (it) {
+                is Result.Loading -> {
+                }
+                is Result.Success -> {
+                    Snackbar.make(recyclerView, "Weather log saved", Snackbar.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
@@ -114,8 +155,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             Looper.getMainLooper()
         )
     }
-
-
     private fun createLocationRequest(): LocationRequest {
         locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -134,10 +173,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         val client: SettingsClient = LocationServices.getSettingsClient(this)
         val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder?.build())
         task.addOnSuccessListener { locationSettingsResponse ->
-            if(locationSettingsResponse.locationSettingsStates.isLocationPresent){
+            if (locationSettingsResponse.locationSettingsStates.isLocationPresent) {
                 getLastKnownLocation()
             }
-
         }
         task.addOnFailureListener { exception ->
             if (exception is ResolvableApiException) {
@@ -156,18 +194,16 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
 
-    fun getLastKnownLocation(){
+    fun getLastKnownLocation() {
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
             if (location != null) {
                 latLng.lat = location.latitude
                 latLng.lng = location.longitude
-                currentWeatherViewModel.loadWeather(latLng.lat.toString(),latLng.lng.toString())
-                Log.v(TAG,"Longitude: LastKnownLocation "+latLng.lat.toString())
-                getWeather((latLng.lat.toInt()).toString(),(latLng.lng.toInt()).toString())
+                currentWeatherViewModel.loadWeather(latLng.lat.toString(), latLng.lng.toString())
+                getWeather((latLng.lat.toInt()).toString(), (latLng.lng.toInt()).toString())
 
 
-            }
-            else{
+            } else {
                 startLocationUpdates()
 
             }
@@ -181,40 +217,51 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 if (resultCode == RESULT_OK) {
                     /*Take your data*/
                     requestingLocationUpdates = true
+                } else {
+                    finish()
                 }
             }
         }
     }
 
 
-    private fun getWeather(lat: String, lng:String) {
-        currentWeatherViewModel.loadWeather(lat,lng)
+    private fun getWeather(lat: String, lng: String) {
+        currentWeatherViewModel.loadWeather(lat, lng)
             .observe(this) {
                 when (it) {
                     is Result.Loading -> {
                         progressParent.visibility = View.VISIBLE
-                        current_temp_layout.visibility = View.GONE
                     }
                     is Result.Success -> {
                         progressParent.visibility = View.GONE
-                        current_temp_layout.visibility = View.VISIBLE
                         val temperature = it.data!!.main.temp.toString()
                         val date = Date().toString()
                         val pressure = it.data.main.pressure.toString()
-                        currentWeatherViewModel.insertItem(WeatherEntity(temperature, date,
-                            pressure
-                        ))
+                        val weatherItem = WeatherEntity(temperature, date,
+                            pressure)
+                        currentWeatherViewModel.insertItem(
+                           weatherItem
+                        )
+                        weatherAdapter.addItem(weatherItem)
+                        if(currentWeatherViewModel.getInformationStored().isFirstTime){
+                            currentWeatherViewModel.updateFirstTime()
+                            currentWeatherViewModel.updateSharedPreference(temperature,it.data.main.temp.toString(),it.data.main.temp_min.toString())
+                            populateHighlightedWeatherFromNetwork(temperature,it.data.main.temp.toString(),it.data.main.temp_min.toString())
+                        }
                     }
                     is Result.Error -> {
                         progressBar.visibility = View.GONE
-                        current_temp_layout.visibility = View.VISIBLE
                     }
                 }
 
             }
     }
 
-
+    private fun populateHighlightedWeatherFromNetwork(currentTemp: String, maxTemp: String, minTemp: String) {
+            current_temp.text = currentTemp
+            max_temp.text = maxTemp
+            min_temp.text = minTemp
+    }
 
 
     private fun requestPermissionsRequired() {
