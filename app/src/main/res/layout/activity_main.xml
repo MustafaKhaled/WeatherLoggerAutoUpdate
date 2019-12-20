@@ -8,25 +8,7 @@
     android:id="@+id/parent_constraints"
     >
 
-    <LinearLayout
-        android:id="@+id/progressParent"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
-        app:layout_constraintEnd_toEndOf="@+id/parent_constraints"
-        app:layout_constraintStart_toStartOf="@+id/parent_constraints"
-        app:layout_constraintTop_toTopOf="@+id/parent_constraints"
-        android:orientation="vertical"
-        android:gravity="center"
-        >
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" /></LinearLayout>
 
     <LinearLayout
         android:id="@+id/current_temp_layout"
@@ -86,8 +68,20 @@
             android:layout_marginTop="16dp"
             tools:text="10/11/2018 13:10" />
 
-
     </LinearLayout>
+
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTint="#2196F3"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/current_temp_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -102,20 +96,5 @@
 
 
     </androidx.recyclerview.widget.RecyclerView>
-
-    <TextView
-        android:id="@+id/no_rows_found"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:gravity="center"
-        tools:text="No Rows"
-        app:layout_constraintVertical_weight="2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/current_temp_layout">
-
-    </TextView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

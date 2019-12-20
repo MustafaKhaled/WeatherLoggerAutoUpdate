@@ -113,6 +113,9 @@ dependencies {
 
     implementation 'com.jakewharton:butterknife:10.2.0'
     kapt 'com.jakewharton:butterknife-compiler:10.2.0'
+    //Work manager
+    implementation "androidx.work:work-runtime-ktx:2.2.0"
+
 
 
 

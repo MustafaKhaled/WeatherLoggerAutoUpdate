@@ -1,37 +1,49 @@
 package com.kot.weatherloggerautoupdate.presentation.viewmodel
 
 import androidx.lifecycle.*
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.kot.weatherloggerautoupdate.BuildConfig
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
 import com.kot.weatherloggerautoupdate.data.presistance.sharedpref.SharedPreferenceManager
 import com.kot.weatherloggerautoupdate.domain.model.WeatherResponse
 import com.kot.weatherloggerautoupdate.domain.repo.WeatherRepo
-import com.kot.weatherloggerautoupdate.domain.usecases.CurrentWeatherUseCase
-import com.kot.weatherloggerautoupdate.util.ResponseApi
-import com.kot.weatherloggerautoupdate.util.Result
+import com.kot.weatherloggerautoupdate.util.MyApplication
+import com.kot.weatherloggerautoupdate.util.ResultCode
+import com.kot.weatherloggerautoupdate.worker.UpdateWeatherWorker
 import kotlinx.coroutines.*
+import org.koin.core.KoinComponent
 import java.lang.Exception
+import java.util.concurrent.TimeUnit
 
 class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
-    ViewModel() {
-    var insertItemLiveData = MutableLiveData<Result<Exception>>()
+    ViewModel() , KoinComponent{
+    private val workManager = WorkManager.getInstance(MyApplication.myInstance)
 
-    fun loadWeather(lat: String, lng: String): LiveData<Result<WeatherResponse>?> {
+    var insertItemLiveData = MutableLiveData<ResultCode<Exception>>()
+
+    fun loadWeather(lat: String, lng: String): LiveData<ResultCode<WeatherResponse>?> {
         return liveData(context = Dispatchers.IO) {
-            emit(Result.Loading())
+            emit(ResultCode.Loading())
             emit(weatherRepo.getCurrentWeather(lat, lng, BuildConfig.API_KEY))
         }
     }
 
+    internal fun callWorkManager(){
+            val workRequest = PeriodicWorkRequest.Builder(UpdateWeatherWorker::class.java,120000,TimeUnit.MILLISECONDS)
+                .build()
+            workManager.enqueue(workRequest)
 
-    fun getAllItems(): LiveData<Result<List<WeatherEntity>>>{
+    }
+
+    fun getAllItems(): LiveData<ResultCode<List<WeatherEntity>>>{
         return liveData(context = Dispatchers.IO) {
-            emit(Result.Loading())
+            emit(ResultCode.Loading())
             try {
-               emit(Result.Success(weatherRepo.loadWeatherPersistence()))
+               emit(ResultCode.Success(weatherRepo.loadWeatherPersistence()))
             }
             catch (e: Exception){
-                emit(Result.Error(e))
+                emit(ResultCode.Error(e))
             }
         }
 
@@ -43,16 +55,20 @@ class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
 
     fun insertItem(weatherEntity: WeatherEntity){
         viewModelScope.launch(context = Dispatchers.IO){
-            insertItemLiveData.postValue(Result.Loading())
+            insertItemLiveData.postValue(ResultCode.Loading())
             try {
                 weatherRepo.insertItem(weatherEntity)
-                insertItemLiveData.postValue(Result.Success(null))
+                insertItemLiveData.postValue(ResultCode.Success(null))
 
             }
             catch (e: Exception){
-                insertItemLiveData.postValue(Result.Error(e))
+                insertItemLiveData.postValue(ResultCode.Error(e))
             }
         }
+    }
+
+    fun updateLatLng(lat: String, lng: String){
+        weatherRepo.updateLatLng(lat, lng)
     }
 
     fun getInformationStored(): SharedPreferenceManager.WeatherPersistence{
