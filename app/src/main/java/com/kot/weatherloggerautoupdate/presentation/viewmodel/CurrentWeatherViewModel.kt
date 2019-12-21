@@ -1,8 +1,7 @@
 package com.kot.weatherloggerautoupdate.presentation.viewmodel
 
 import androidx.lifecycle.*
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
+import androidx.work.*
 import com.kot.weatherloggerautoupdate.BuildConfig
 import com.kot.weatherloggerautoupdate.data.presistance.room.entities.WeatherEntity
 import com.kot.weatherloggerautoupdate.data.presistance.sharedpref.SharedPreferenceManager
@@ -30,9 +29,13 @@ class CurrentWeatherViewModel(private val weatherRepo: WeatherRepo) :
     }
 
     internal fun callWorkManager(){
-            val workRequest = PeriodicWorkRequest.Builder(UpdateWeatherWorker::class.java,120000,TimeUnit.MILLISECONDS)
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            val workRequest = PeriodicWorkRequest
+                .Builder(UpdateWeatherWorker::class.java,15,TimeUnit.MINUTES)
+                .setConstraints(constraints.build())
                 .build()
-            workManager.enqueue(workRequest)
+            workManager.enqueueUniquePeriodicWork("weather", ExistingPeriodicWorkPolicy.KEEP,workRequest)
 
     }
 
